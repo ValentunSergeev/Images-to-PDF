@@ -3,16 +3,14 @@ package swati4star.createpdf.viewModel;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
 import android.arch.lifecycle.ViewModel;
-import android.preference.PreferenceManager;
 
 import org.json.JSONException;
 
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 import swati4star.createpdf.util.RecentUtil;
 
-import static swati4star.createpdf.util.RecentUtil.*;
+import static swati4star.createpdf.util.RecentUtil.RecentList;
 
 public class HomeViewModel extends ViewModel {
     private final RecentUtil recentUtil;
