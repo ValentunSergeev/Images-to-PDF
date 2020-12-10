@@ -127,6 +127,6 @@ dependencies {
     })
 }
 
-preBuild.dependsOn('checkstyle')
+//preBuild.dependsOn('checkstyle')
 assemble.dependsOn('lint')
 check.dependsOn('checkstyle')

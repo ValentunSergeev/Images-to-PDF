@@ -29,8 +29,10 @@ import swati4star.createpdf.adapter.RecentListAdapter;
 import swati4star.createpdf.customviews.MyCardView;
 import swati4star.createpdf.fragment.texttopdf.TextToPdfFragment;
 import swati4star.createpdf.model.HomePageItem;
+import swati4star.createpdf.providers.viewModel.HomeProvider;
 import swati4star.createpdf.util.CommonCodeUtils;
 import swati4star.createpdf.util.RecentUtil;
+import swati4star.createpdf.viewModel.HomeViewModel;
 
 import static swati4star.createpdf.util.Constants.ADD_IMAGES;
 import static swati4star.createpdf.util.Constants.ADD_PWD;
@@ -44,7 +46,7 @@ import static swati4star.createpdf.util.Constants.REMOVE_PWd;
 import static swati4star.createpdf.util.Constants.REORDER_PAGES;
 import static swati4star.createpdf.util.Constants.ROTATE_PAGES;
 
-public class HomeFragment extends Fragment implements View.OnClickListener {
+public class HomeFragment extends BaseFragment<HomeViewModel> implements View.OnClickListener {
 
     private Activity mActivity;
     @BindView(R.id.images_to_pdf)
@@ -106,6 +108,10 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
     private Map<Integer, HomePageItem> mFragmentPositionMap;
     private RecentListAdapter mAdapter;
 
+    public HomeFragment() {
+        super(HomeViewModel.class, new HomeProvider());
+    }
+
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -137,33 +143,31 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
         extractText.setOnClickListener(this);
         addText.setOnClickListener(this);
 
-        mAdapter =  new RecentListAdapter(this);
+        mAdapter = new RecentListAdapter(this);
         recentList.setAdapter(mAdapter);
         return rootview;
     }
 
-    @Override public void onViewCreated(
+    @Override
+    public void onViewCreated(
         @NonNull final View view, @Nullable final Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        try {
-            LinkedHashMap<String, Map<String, String>> mRecentList = RecentUtil.getInstance()
-                    .getList(PreferenceManager.getDefaultSharedPreferences(mActivity));
-            if (!mRecentList.isEmpty()) {
+        observe(viewModel.recentListLiveData, list -> {
+            if (list != null && !list.isEmpty()) {
                 recentLabel.setVisibility(View.VISIBLE);
                 recentLayout.setVisibility(View.VISIBLE);
-                List<String> featureItemIds = new ArrayList<>(mRecentList.keySet());
-                List<Map<String, String>> featureItemList = new ArrayList<>(mRecentList.values());
+
+                List<String> featureItemIds = new ArrayList<>(list.keySet());
+                List<Map<String, String>> featureItemList = new ArrayList<>(list.values());
+
                 mAdapter.updateList(featureItemIds, featureItemList);
                 mAdapter.notifyDataSetChanged();
             } else {
                 recentLabel.setVisibility(View.GONE);
                 recentLayout.setVisibility(View.GONE);
             }
-
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        });
     }
 
     @Override
@@ -183,16 +187,13 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
         setTitleFragment(mFragmentPositionMap.get(v.getId()).getTitleString());
 
         Map<String, String> feature = new HashMap<>();
-        feature.put(
-                String.valueOf(mFragmentPositionMap.get(v.getId()).getTitleString()),
-                String.valueOf(mFragmentPositionMap.get(v.getId()).getmDrawableId()));
 
-        try {
-            RecentUtil.getInstance().addFeatureInRecentList(PreferenceManager
-                    .getDefaultSharedPreferences(mActivity), v.getId(), feature);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        feature.put(
+            String.valueOf(mFragmentPositionMap.get(v.getId()).getTitleString()),
+            String.valueOf(mFragmentPositionMap.get(v.getId()).getmDrawableId())
+        );
+
+        viewModel.featureClicked(v.getId(), feature);
 
         switch (v.getId()) {
             case R.id.images_to_pdf:
@@ -297,6 +298,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
 
     /**
      * Highligh navigation drawer item
+     *
      * @param id - item id to be hjighlighted
      */
     private void highlightNavigationDrawerItem(int id) {
@@ -306,6 +308,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
 
     /**
      * Sets the title on action bar
+     *
      * @param title - title of string to be shown
      */
     private void setTitleFragment(int title) {
