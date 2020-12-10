@@ -13,6 +13,14 @@ import java.util.Map;
 import static swati4star.createpdf.util.Constants.RECENT_PREF;
 
 public class RecentUtil {
+    public static class RecentList {
+        public LinkedHashMap<String, Map<String, String>> content;
+
+        public RecentList(LinkedHashMap<String, Map<String, String>> content) {
+            this.content = content;
+        }
+    }
+
     private final SharedPreferences preferences;
 
     private static RecentUtil INSTANCE;
@@ -34,7 +42,7 @@ public class RecentUtil {
      * @return LinkedHashMap consisting of string as a key holding the feature view Id when it was
      * clicked and map of drawable Id and title string res Id.
      * */
-    public LinkedHashMap<String, Map<String, String>> getList() throws JSONException {
+    public RecentList getList() throws JSONException {
 
         //creating the empty list.
         LinkedHashMap<String, Map<String, String>> recentList = new LinkedHashMap<>();
@@ -60,30 +68,34 @@ public class RecentUtil {
             }
         }
 
-        return recentList;
+        return new RecentList(recentList);
     }
 
     /**
      * Adds the feature that was clicked to the recent bucket and updates the shared preference.
      * @param resId - the view Id basically the feature that was clicked.
-     * @param itemClicked - Map of Drawable Id and title string resId received from HomePageItem.
+     * @param itemClicked - Map of Drawable Id and title string resId received from HomePageItem.\
+     * @return updated recent list
      * */
-    public void addFeatureInRecentList(int resId, Map<String, String> itemClicked) throws JSONException {
+    public RecentList addFeatureInRecentList(int resId, Map<String, String> itemClicked) throws JSONException {
 
-        LinkedHashMap<String, Map<String, String>> recentList = getList();
+        RecentList recentList = getList();
+        LinkedHashMap<String, Map<String, String>> content = recentList.content;
 
         //remove the first item from the recent list.
-        if (recentList.size() == 3) {
+        if (content.size() == 3) {
             //now if the list contains the particular key
-            if (recentList.remove(String.valueOf(resId)) == null) {
+            if (content.remove(String.valueOf(resId)) == null) {
                 //bucket is full.
-                recentList.remove(recentList.keySet().iterator().next()); //removes the first.
+                content.remove(content.keySet().iterator().next()); //removes the first.
             }
         }
 
-        recentList.put(String.valueOf(resId), itemClicked);
+        content.put(String.valueOf(resId), itemClicked);
 
         //update the preferences.
-        preferences.edit().putString(RECENT_PREF, new JSONObject(recentList).toString()).apply();
+        preferences.edit().putString(RECENT_PREF, new JSONObject(content).toString()).apply();
+
+        return recentList;
     }
 }

@@ -154,12 +154,14 @@ public class HomeFragment extends BaseFragment<HomeViewModel> implements View.On
         super.onViewCreated(view, savedInstanceState);
 
         observe(viewModel.recentListLiveData, list -> {
-            if (list != null && !list.isEmpty()) {
+            LinkedHashMap<String, Map<String, String>> content = list.content;
+
+            if (!content.isEmpty()) {
                 recentLabel.setVisibility(View.VISIBLE);
                 recentLayout.setVisibility(View.VISIBLE);
 
-                List<String> featureItemIds = new ArrayList<>(list.keySet());
-                List<Map<String, String>> featureItemList = new ArrayList<>(list.values());
+                List<String> featureItemIds = new ArrayList<>(content.keySet());
+                List<Map<String, String>> featureItemList = new ArrayList<>(content.values());
 
                 mAdapter.updateList(featureItemIds, featureItemList);
                 mAdapter.notifyDataSetChanged();
